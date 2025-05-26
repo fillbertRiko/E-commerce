@@ -24,7 +24,7 @@ class AdminController extends Controller
 {
     public function index()
     {
-        return view('admin.index');
+        return view('admin.page.index');
     }
 
     public function dashboard()
@@ -34,12 +34,12 @@ class AdminController extends Controller
 
     public function settings()
     {
-        return view('admin.settings');
+        return view('admin.page.settings');
     }
 
     public function users()
     {
-        return view('admin.users');
+        return view('admin.page.users');
     }
 
     public function __construct()
