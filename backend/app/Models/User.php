@@ -9,9 +9,14 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+    public function hasRole($role)
+    {
+        return $this->role->name === $role;
+    }
 
     /**
      * The attributes that are mass assignable.
