@@ -9,6 +9,7 @@ $secondary-color: #f5f5f5;
     margin-bottom: 20px;
 }
 
+
 .auth-container {
     display: flex;
     flex-direction: column;
@@ -84,8 +85,32 @@ $secondary-color: #f5f5f5;
     border-radius: 4px;
     font-size: 16px;
     font-weight: 500;
+    margin-top: 20px;
     cursor: pointer;
     transition: background-color 0.3s;
+}
+
+/* Thêm vào file CSS hiện tại */
+.auth-button.submitting {
+    position: relative;
+    opacity: 0.8;
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .auth-button:hover {
@@ -127,6 +152,7 @@ $secondary-color: #f5f5f5;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    font-family: $font-family;
 }
 
 .login-container {

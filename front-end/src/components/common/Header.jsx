@@ -1,6 +1,7 @@
 import React from 'react'
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css';
+import LoginPage from '../auth/CRUD/LoginPage';
 
 const Header = () => {
     return (
@@ -20,8 +21,8 @@ const Header = () => {
                                 <Nav.Link href="#link" className='nav-link'>Tin tức</Nav.Link>
                                 <Nav.Link href="#link" className='nav-link'>Giỏ hàng</Nav.Link>
                                 <NavDropdown title="Tài khoản" id="basic-nav-dropdown">
-                                    <NavDropdown.Item href="#action/3.1">Đăng nhập</NavDropdown.Item>
-                                    <NavDropdown.Item href="#action/3.2">
+                                    <NavDropdown.Item href="/login">Đăng nhập</NavDropdown.Item>
+                                    <NavDropdown.Item href="/register">
                                         Đăng ký
                                     </NavDropdown.Item>
                                 </NavDropdown>

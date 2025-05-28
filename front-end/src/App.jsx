@@ -5,6 +5,8 @@ import About from './components/pages/About';
 import Login from './components/auth/CRUD/LoginPage';
 import { Route } from 'react-router-dom';
 import './assets/css/style.scss';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
 
@@ -17,6 +19,7 @@ function App() {
           <Route path='/login' element={<Login />} />
         </Routes>
       </BrowserRouter>
+      <ToastContainer />
     </>
   )
 }
