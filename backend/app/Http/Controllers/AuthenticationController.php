@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class AuthenticationController extends Controller
 {
@@ -29,15 +30,22 @@ class AuthenticationController extends Controller
                 ];
 
             if (Auth::attempt($credentials)) {
-                $user = Auth::user();
-                $token = $user->createToken('auth_token')->plainTextToken;
 
-                return response()->json([
+                $user = Auth::user();
+                $response = [
                     'status' => true,
-                    'message' => 'Authentication successful',
-                    'token' => $token,
-                    'user' => $user,
-                ], 200);
+                    'user' => $user
+                ];
+
+                if ($user->role::class === 'super_admin') {
+                    $response['message'] = 'Super Admin authenticated successfully.';
+                } elseif ($user->role::class === 'admin') {
+                    $response['message'] = 'Admin authenticated successfully.';
+                } else {
+                    $response['message'] = 'User authenticated successfully.';
+                }
+
+                return response()->json($response, 200);
             } else {
                 return response()->json([
                     'status' => false,
@@ -48,5 +56,15 @@ class AuthenticationController extends Controller
                 ], 401);
             }
         }
+    }
+
+    public function logout(Request $request)
+    {
+        $user = User::find(Auth::id());
+        $user->tokens()->delete();
+        return response()->json([
+            'status' => true,
+            'message' => 'User logged out successfully.'
+        ], 200);
     }
 }
