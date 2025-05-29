@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Routes } from 'react-router-dom'
 import Home from './components/pages/Home';
 import About from './components/pages/About';
-import Login from './components/auth/CRUD/LoginPage';
+import Login from './components/auth/pages/Login';
 import { Route } from 'react-router-dom';
 import './assets/css/style.scss';
 import { ToastContainer } from 'react-toastify';
