@@ -1,22 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    @include('components.head')
+    <title>My React App</title>
+    <!-- Load Vite assets -->
+    @vite(['resources/css/app.css', 'resources/js/main.jsx'])
 </head>
 
 <body>
-    @include('components.header')
+    <!-- Phần tử root phải tồn tại -->
+    <div id="root"></div>
 
-    <div class="container">
-        @include('components.sidebar')
-
-        <main>
-            @yield('content')
-        </main>
-    </div>
-
-    @include('components.footer')
+    <!-- Debug: Kiểm tra xem JS đã load -->
+    <script>
+        console.log("HTML loaded");
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM fully loaded and parsed");
+        });
+    </script>
 </body>
 
 </html>
