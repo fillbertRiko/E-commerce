@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthenticationController;
@@ -13,9 +14,20 @@ Route::post('authenticate', [AuthenticationController::class, 'authenticate']);
 // })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    Route::post('dashboard', [DashboardController::class, 'index']);
-    Route::get('logout', [AuthenticationController::class, 'logout']);
+    return $request->user();
 });
+
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+    Route::get('/user/profile', [UsersController::class, 'profile'])->name('user.profile');
+    Route::get('/user/edit-profile', [UsersController::class, 'editProfile'])->name('user.editProfile');
+    Route::post('/user/update-profile', [UsersController::class, 'updateProfile'])->name('user.updateProfile');
+    Route::get('/user/change-password', [UsersController::class, 'changePassword'])->name('user.changePassword');
+    Route::post('/user/update-password', [UsersController::class, 'updatePassword'])->name('user.updatePassword');
+});
+
 
 // Thêm route OPTIONS để xử lý preflight requests
 Route::options('/{any}', function () {
