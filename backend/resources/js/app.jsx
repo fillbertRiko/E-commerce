@@ -1,8 +1,13 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
+import React from "react";
+import Home from "./pages/Home";
 
-function App() {
-    return <h1>Hello React + Laravel!</h1>;
-}
+// Định nghĩa component App
+const App = () => {
+    return (
+        <div>
+            <Home />
+        </div>
+    );
+};
 
-createRoot(document.getElementById('app')).render(<App />);
+export default App;

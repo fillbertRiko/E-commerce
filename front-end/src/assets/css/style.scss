@@ -1,155 +1,17 @@
-//Global Colors and Variables
-$primary-color: #3498db;
-$secondary-color: #2ecc71;
-$text-color: #2c3e50;
-$border-color: #bdc3c7;
-$hover-color: #2980b9;
-$active-color: #27ae60;
-$font-weight: 400;
-$font-family: 'Arial, sans-serif';
-$font-size: 16px;
-$background-color: #f4f4f4;
-$border-radius: 5px;
-$box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-$transition: all 0.3s ease;
-$padding: 10px;
-
-body {
-    font-family: $font-family;
-    font-size: $font-size;
-    background-color: $background-color;
-    color: #333;
-    margin: 0;
-    padding: $padding;
-    line-height: 1.6;
-    box-sizing: border-box;
-    transition: $transition;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
-
+/* Custom styles */
+.product-actions {
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-div {
-    box-sizing: border-box;
+.card:hover .product-actions {
+    opacity: 1;
 }
 
-header {
-    background-color: $primary-color;
-    color: white;
-
-    nav {
-        .nav-link {
-            text-transform: uppercase;
-            color: $text-color;
-            text-decoration: none;
-            font-size: 1em;
-            font-weight: $font-weight;
-            margin-left: 20px;
-
-            &:hover {
-                color: $hover-color;
-            }
-
-            &:active {
-                color: $active-color;
-            }
-        }
-    }
-
-    .logo {
-        font-size: 1.5em;
-        font-weight: bold;
-        color: white;
-        text-decoration: none;
-        text-transform: uppercase;
-
-        &:hover {
-            color: $hover-color;
-        }
-    }
+.social-icons a {
+    transition: color 0.3s ease;
 }
 
-main {
-    .section-1 {
-        background-image: linear-gradient(rgba(44, 62, 80, 0.5), rgba(44, 62, 80, 0.5)), url('../images/1287239.jpg');
-        background-size: cover;
-        background-position: center;
-
-        .hero-content {
-            text-align: center;
-            padding: 50px 20px;
-            color: white;
-
-
-        }
-
-        h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-
-        p {
-            font-size: 1.2em;
-            line-height: 1.5;
-        }
-
-        button {
-            background-color: $secondary-color;
-            color: white;
-            border: none;
-            border-radius: $border-radius;
-            padding: 10px 15px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: $transition;
-            font-size: 1em;
-            box-shadow: $box-shadow;
-            margin-top: 20px;
-            margin-left: 20px;
-
-            &:hover {
-                background-color: darken($secondary-color, 10%);
-            }
-
-            &:active {
-                background-color: darken($secondary-color, 20%);
-            }
-
-            .button-find {
-                color: white;
-                text-decoration: none;
-                font-weight: bold;
-
-                &:hover {
-                    color: lighten($secondary-color, 20%);
-                }
-
-                &:active {
-                    color: lighten($secondary-color, 30%);
-                }
-            }
-
-            .button-learn {
-                color: white;
-                text-decoration: none;
-                font-weight: bold;
-
-                &:hover {
-                    color: lighten($secondary-color, 20%);
-                }
-
-                &:active {
-                    color: lighten($secondary-color, 30%);
-                }
-            }
-        }
-    }
-
-    .about-us {
-        img {
-            border-radius: 50px;
-            box-shadow: $box-shadow;
-        }
-    }
+.social-icons a:hover {
+    color: #0d6efd !important;
 }

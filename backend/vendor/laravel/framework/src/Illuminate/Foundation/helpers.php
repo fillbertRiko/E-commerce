@@ -351,7 +351,7 @@ if (! function_exists('csrf_field')) {
      */
     function csrf_field()
     {
-        return new HtmlString('<input type="hidden" name="_token" value="'.csrf_token().'" autocomplete="off">');
+        return new HtmlString('<input type="hidden" name="_token" value="' . csrf_token() . '" autocomplete="off">');
     }
 }
 
@@ -492,10 +492,10 @@ if (! function_exists('fake') && class_exists(\Faker\Factory::class)) {
 
         $locale ??= 'en_US';
 
-        $abstract = \Faker\Generator::class.':'.$locale;
+        $abstract = \Faker\Generator::class . ':' . $locale;
 
         if (! app()->bound($abstract)) {
-            app()->singleton($abstract, fn () => \Faker\Factory::create($locale));
+            app()->singleton($abstract, fn() => \Faker\Factory::create($locale));
         }
 
         return app()->make($abstract);
@@ -569,7 +569,7 @@ if (! function_exists('method_field')) {
      */
     function method_field($method)
     {
-        return new HtmlString('<input type="hidden" name="_method" value="'.$method.'">');
+        return new HtmlString('<input type="hidden" name="_method" value="' . $method . '">');
     }
 }
 

@@ -4,8 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\admin\DashboardController;
-use App\Models\User;
-use App\Http\Controllers\UsersController;
 
 Route::post('authenticate', [AuthenticationController::class, 'authenticate']);
 
@@ -26,3 +24,18 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/user/change-password', [UsersController::class, 'changePassword'])->name('user.changePassword');
     Route::post('/user/update-password', [UsersController::class, 'updatePassword'])->name('user.updatePassword');
 });
+
+// Thêm route OPTIONS để xử lý preflight requests
+Route::options('/{any}', function () {
+    return response()->json();
+})->where('any', '.*');
+
+// Các API routes của bạn
+Route::middleware('cors')->group(function () {
+    Route::get('/test', function () {
+        return response()->json(['message' => 'CORS working!']);
+    });
+
+    // Thêm các route API khác của bạn ở đây
+});
+Route::get('/', [HomeController::class, 'index'])->name('home');
