@@ -1,0 +1,867 @@
+E-COMMERCE PROJECT IMPLEMENTATION GUIDE
+=====================================
+
+PHẦN 1: FRONTEND IMPLEMENTATION
+-------------------------------------
+
+1. Product Management Components
+------------------------------
+
+a) ProductList.vue
+```vue
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useLoading } from '@/composables/useLoading';
+import { useErrorHandler } from '@/composables/useErrorHandler';
+import BaseCard from '@/components/base/BaseCard.vue';
+import BaseButton from '@/components/base/BaseButton.vue';
+
+const { isLoading, withLoading } = useLoading();
+const { withErrorHandler } = useErrorHandler();
+
+const products = ref([]);
+const filters = ref({
+  category: '',
+  price: null,
+  sort: 'newest'
+});
+
+const fetchProducts = async () => {
+  await withErrorHandler(async () => {
+    const response = await api.get('/products', { params: filters.value });
+    products.value = response.data;
+  });
+};
+
+onMounted(() => {
+  withLoading(fetchProducts);
+});
+</script>
+
+<template>
+  <div class="container mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Products</h1>
+      <div class="flex space-x-4">
+        <!-- Filters -->
+        <select v-model="filters.category" class="form-select">
+          <option value="">All Categories</option>
+          <!-- Add categories -->
+        </select>
+        
+        <select v-model="filters.sort" class="form-select">
+          <option value="newest">Newest</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <BaseCard v-for="product in products" :key="product.id" :loading="isLoading">
+        <!-- Product Card Content -->
+      </BaseCard>
+    </div>
+  </div>
+</template>
+```
+
+b) ProductDetail.vue
+```vue
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useLoading } from '@/composables/useLoading';
+import { useErrorHandler } from '@/composables/useErrorHandler';
+import { useCartStore } from '@/stores/cart';
+
+const route = useRoute();
+const cartStore = useCartStore();
+const { isLoading, withLoading } = useLoading();
+const { withErrorHandler } = useErrorHandler();
+
+const product = ref(null);
+const selectedVariant = ref(null);
+const quantity = ref(1);
+
+const fetchProduct = async () => {
+  await withErrorHandler(async () => {
+    const response = await api.get(`/products/${route.params.id}`);
+    product.value = response.data;
+    if (product.value.variants?.length) {
+      selectedVariant.value = product.value.variants[0];
+    }
+  });
+};
+
+const addToCart = async () => {
+  await cartStore.addItem({
+    productId: product.value.id,
+    variantId: selectedVariant.value?.id,
+    quantity: quantity.value
+  });
+};
+
+onMounted(() => {
+  withLoading(fetchProduct);
+});
+</script>
+
+<template>
+  <div class="container mx-auto px-4 py-8">
+    <div v-if="product" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Product Images -->
+      <div class="space-y-4">
+        <img :src="product.image" :alt="product.name" class="w-full rounded-lg">
+        <!-- Thumbnail Images -->
+      </div>
+
+      <!-- Product Info -->
+      <div class="space-y-6">
+        <h1 class="text-3xl font-bold">{{ product.name }}</h1>
+        <p class="text-gray-600">{{ product.description }}</p>
+        
+        <!-- Price -->
+        <div class="text-2xl font-bold">
+          {{ product.price }}
+        </div>
+
+        <!-- Variants -->
+        <div v-if="product.variants?.length" class="space-y-4">
+          <!-- Add variant selection -->
+        </div>
+
+        <!-- Quantity -->
+        <div class="flex items-center space-x-4">
+          <label class="text-sm font-medium">Quantity:</label>
+          <input type="number" v-model="quantity" min="1" class="form-input w-20">
+        </div>
+
+        <!-- Add to Cart -->
+        <BaseButton @click="addToCart" :loading="isLoading">
+          Add to Cart
+        </BaseButton>
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+2. Cart System
+-------------
+
+a) stores/cart.js
+```javascript
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import api from '@/services/api';
+import { useNotification } from '@/composables/useNotification';
+
+export const useCartStore = defineStore('cart', () => {
+  const notification = useNotification();
+  const items = ref([]);
+  const isLoading = ref(false);
+
+  const total = computed(() => {
+    return items.value.reduce((sum, item) => {
+      return sum + (item.price * item.quantity);
+    }, 0);
+  });
+
+  const itemCount = computed(() => {
+    return items.value.reduce((sum, item) => sum + item.quantity, 0);
+  });
+
+  async function fetchCart() {
+    try {
+      isLoading.value = true;
+      const response = await api.get('/cart');
+      items.value = response.data;
+    } catch (error) {
+      notification.error('Failed to load cart');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function addItem({ productId, variantId, quantity }) {
+    try {
+      isLoading.value = true;
+      await api.post('/cart/items', { productId, variantId, quantity });
+      await fetchCart();
+      notification.success('Item added to cart');
+    } catch (error) {
+      notification.error('Failed to add item to cart');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function updateItemQuantity(itemId, quantity) {
+    try {
+      isLoading.value = true;
+      await api.patch(`/cart/items/${itemId}`, { quantity });
+      await fetchCart();
+    } catch (error) {
+      notification.error('Failed to update item quantity');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function removeItem(itemId) {
+    try {
+      isLoading.value = true;
+      await api.delete(`/cart/items/${itemId}`);
+      await fetchCart();
+      notification.success('Item removed from cart');
+    } catch (error) {
+      notification.error('Failed to remove item');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function clearCart() {
+    try {
+      isLoading.value = true;
+      await api.delete('/cart');
+      items.value = [];
+      notification.success('Cart cleared');
+    } catch (error) {
+      notification.error('Failed to clear cart');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  return {
+    items,
+    isLoading,
+    total,
+    itemCount,
+    fetchCart,
+    addItem,
+    updateItemQuantity,
+    removeItem,
+    clearCart
+  };
+});
+```
+
+b) components/cart/CartSidebar.vue
+```vue
+<script setup>
+import { onMounted } from 'vue';
+import { useCartStore } from '@/stores/cart';
+import BaseButton from '@/components/base/BaseButton.vue';
+
+const cartStore = useCartStore();
+
+onMounted(() => {
+  cartStore.fetchCart();
+});
+</script>
+
+<template>
+  <div class="fixed inset-y-0 right-0 w-96 bg-white shadow-xl">
+    <div class="h-full flex flex-col">
+      <!-- Header -->
+      <div class="p-4 border-b">
+        <h2 class="text-lg font-medium">Shopping Cart</h2>
+      </div>
+
+      <!-- Cart Items -->
+      <div class="flex-1 overflow-y-auto p-4">
+        <div v-if="cartStore.isLoading" class="flex justify-center">
+          <span class="loading"></span>
+        </div>
+
+        <template v-else>
+          <div v-if="cartStore.items.length === 0" class="text-center text-gray-500">
+            Your cart is empty
+          </div>
+
+          <div v-else class="space-y-4">
+            <div v-for="item in cartStore.items" :key="item.id" class="flex items-center space-x-4">
+              <!-- Item Image -->
+              <img :src="item.image" :alt="item.name" class="w-16 h-16 object-cover rounded">
+
+              <!-- Item Details -->
+              <div class="flex-1">
+                <h3 class="font-medium">{{ item.name }}</h3>
+                <p class="text-sm text-gray-500">{{ item.variant }}</p>
+                <div class="flex items-center mt-2">
+                  <button @click="cartStore.updateItemQuantity(item.id, item.quantity - 1)"
+                    class="text-gray-500 hover:text-gray-700">
+                    -
+                  </button>
+                  <span class="mx-2">{{ item.quantity }}</span>
+                  <button @click="cartStore.updateItemQuantity(item.id, item.quantity + 1)"
+                    class="text-gray-500 hover:text-gray-700">
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <!-- Price -->
+              <div class="text-right">
+                <div class="font-medium">{{ item.price }}</div>
+                <button @click="cartStore.removeItem(item.id)"
+                  class="text-sm text-red-600 hover:text-red-700">
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-4 border-t">
+        <div class="flex justify-between mb-4">
+          <span class="font-medium">Total:</span>
+          <span class="font-medium">{{ cartStore.total }}</span>
+        </div>
+
+        <BaseButton block @click="$router.push('/checkout')" :disabled="cartStore.items.length === 0">
+          Checkout
+        </BaseButton>
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+3. User Profile Components
+-------------------------
+
+a) views/profile/UserProfile.vue
+```vue
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { useNotification } from '@/composables/useNotification';
+import { useFormValidation } from '@/composables/useFormValidation';
+import BaseInput from '@/components/base/BaseInput.vue';
+import BaseButton from '@/components/base/BaseButton.vue';
+
+const authStore = useAuthStore();
+const notification = useNotification();
+
+const { formData, errors, validateForm, handleBlur, handleInput, rules } = useFormValidation(
+  {
+    name: authStore.user?.name || '',
+    email: authStore.user?.email || '',
+    phone: authStore.user?.phone || '',
+  },
+  {
+    name: [rules.required()],
+    email: [rules.required(), rules.email()],
+    phone: [rules.pattern(/^\+?[\d\s-]{8,}$/, 'Please enter a valid phone number')]
+  }
+);
+
+const isLoading = ref(false);
+
+const updateProfile = async () => {
+  if (!validateForm()) return;
+
+  try {
+    isLoading.value = true;
+    await api.patch('/user/profile', formData);
+    notification.success('Profile updated successfully');
+  } catch (error) {
+    notification.error('Failed to update profile');
+  } finally {
+    isLoading.value = false;
+  }
+};
+</script>
+
+<template>
+  <div class="max-w-2xl mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-6">Profile Settings</h1>
+
+    <form @submit.prevent="updateProfile" class="space-y-6">
+      <BaseInput
+        v-model="formData.name"
+        label="Name"
+        :error="errors.name"
+        @blur="handleBlur('name')"
+        @input="handleInput('name', $event)"
+      />
+
+      <BaseInput
+        v-model="formData.email"
+        type="email"
+        label="Email"
+        :error="errors.email"
+        @blur="handleBlur('email')"
+        @input="handleInput('email', $event)"
+      />
+
+      <BaseInput
+        v-model="formData.phone"
+        label="Phone"
+        :error="errors.phone"
+        @blur="handleBlur('phone')"
+        @input="handleInput('phone', $event)"
+      />
+
+      <BaseButton type="submit" :loading="isLoading">
+        Save Changes
+      </BaseButton>
+    </form>
+  </div>
+</template>
+```
+
+PHẦN 2: BACKEND IMPLEMENTATION
+------------------------------------
+
+1. Project Setup
+---------------
+```bash
+# Create new Laravel project
+composer create-project laravel/laravel E-commerce_BE
+
+# Install required packages
+composer require laravel/sanctum
+composer require spatie/laravel-permission
+composer require intervention/image
+
+# Setup database
+php artisan migrate:fresh
+php artisan db:seed
+```
+
+2. Database Structure
+--------------------
+
+a) Create migrations:
+
+```php
+// create_categories_table.php
+public function up()
+{
+    Schema::create('categories', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('slug')->unique();
+        $table->text('description')->nullable();
+        $table->string('image')->nullable();
+        $table->boolean('is_active')->default(true);
+        $table->timestamps();
+    });
+}
+
+// create_products_table.php
+public function up()
+{
+    Schema::create('products', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('slug')->unique();
+        $table->text('description');
+        $table->decimal('price', 10, 2);
+        $table->integer('stock')->default(0);
+        $table->foreignId('category_id')->constrained();
+        $table->boolean('is_active')->default(true);
+        $table->timestamps();
+    });
+}
+
+// create_orders_table.php
+public function up()
+{
+    Schema::create('orders', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('user_id')->constrained();
+        $table->string('order_number')->unique();
+        $table->decimal('total_amount', 10, 2);
+        $table->string('status');
+        $table->text('shipping_address');
+        $table->text('billing_address');
+        $table->string('payment_method');
+        $table->string('payment_status');
+        $table->timestamps();
+    });
+}
+```
+
+3. Models
+---------
+
+a) app/Models/Product.php
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'price',
+        'stock',
+        'category_id',
+        'is_active'
+    ];
+
+    protected $casts = [
+        'price' => 'decimal:2',
+        'is_active' => 'boolean',
+    ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class)
+            ->withPivot('quantity', 'price')
+            ->withTimestamps();
+    }
+}
+```
+
+4. Controllers
+-------------
+
+a) app/Http/Controllers/API/ProductController.php
+```php
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use Illuminate\Http\Request;
+use App\Http\Resources\ProductResource;
+use App\Http\Requests\ProductRequest;
+
+class ProductController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Product::query();
+
+        if ($request->has('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        if ($request->has('search')) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        $products = $query->paginate(12);
+
+        return ProductResource::collection($products);
+    }
+
+    public function store(ProductRequest $request)
+    {
+        $product = Product::create($request->validated());
+
+        return new ProductResource($product);
+    }
+
+    public function show(Product $product)
+    {
+        return new ProductResource($product);
+    }
+
+    public function update(ProductRequest $request, Product $product)
+    {
+        $product->update($request->validated());
+
+        return new ProductResource($product);
+    }
+
+    public function destroy(Product $product)
+    {
+        $product->delete();
+
+        return response()->noContent();
+    }
+}
+```
+
+5. API Routes
+------------
+
+routes/api.php:
+```php
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\OrderController;
+
+// Public routes
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+
+// Protected routes
+Route::middleware('auth:sanctum')->group(function () {
+    // User
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Products
+    Route::apiResource('products', ProductController::class);
+    
+    // Categories
+    Route::apiResource('categories', CategoryController::class);
+    
+    // Orders
+    Route::apiResource('orders', OrderController::class);
+    
+    // Cart
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart/items', [CartController::class, 'addItem']);
+    Route::patch('/cart/items/{id}', [CartController::class, 'updateItem']);
+    Route::delete('/cart/items/{id}', [CartController::class, 'removeItem']);
+    Route::delete('/cart', [CartController::class, 'clear']);
+});
+```
+
+6. Middleware
+------------
+
+a) app/Http/Middleware/Authenticate.php
+```php
+<?php
+
+namespace App\Http\Middleware;
+
+use Illuminate\Auth\Middleware\Authenticate as Middleware;
+use Illuminate\Http\Request;
+
+class Authenticate extends Middleware
+{
+    protected function redirectTo(Request $request): ?string
+    {
+        return $request->expectsJson() ? null : route('login');
+    }
+}
+```
+
+7. Exception Handling
+--------------------
+
+a) app/Exceptions/Handler.php
+```php
+<?php
+
+namespace App\Exceptions;
+
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Throwable;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Auth\AuthenticationException;
+
+class Handler extends ExceptionHandler
+{
+    public function register(): void
+    {
+        $this->renderable(function (ValidationException $e) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => $e->errors(),
+            ], 422);
+        });
+
+        $this->renderable(function (NotFoundHttpException $e) {
+            return response()->json([
+                'message' => 'Resource not found.'
+            ], 404);
+        });
+
+        $this->renderable(function (AuthenticationException $e) {
+            return response()->json([
+                'message' => 'Unauthenticated.'
+            ], 401);
+        });
+    }
+}
+```
+
+PHẦN 3: TESTING
+--------------
+
+1. Frontend Tests
+----------------
+
+a) tests/unit/components/BaseButton.spec.js
+```javascript
+import { mount } from '@vue/test-utils';
+import BaseButton from '@/components/base/BaseButton.vue';
+
+describe('BaseButton.vue', () => {
+  it('renders slot content', () => {
+    const wrapper = mount(BaseButton, {
+      slots: {
+        default: 'Click me'
+      }
+    });
+    expect(wrapper.text()).toContain('Click me');
+  });
+
+  it('applies loading state correctly', async () => {
+    const wrapper = mount(BaseButton, {
+      props: {
+        loading: true
+      }
+    });
+    expect(wrapper.find('.loading-spinner').exists()).toBe(true);
+    expect(wrapper.attributes('disabled')).toBeDefined();
+  });
+});
+```
+
+2. Backend Tests
+---------------
+
+a) tests/Feature/ProductTest.php
+```php
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+use App\Models\User;
+use App\Models\Product;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+class ProductTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_can_get_products_list()
+    {
+        $user = User::factory()->create();
+        $products = Product::factory()->count(5)->create();
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/products');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(5, 'data');
+    }
+
+    public function test_can_create_product()
+    {
+        $user = User::factory()->create();
+        $productData = Product::factory()->make()->toArray();
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/products', $productData);
+
+        $response->assertStatus(201)
+            ->assertJsonFragment([
+                'name' => $productData['name']
+            ]);
+    }
+}
+```
+
+PHẦN 4: DEPLOYMENT
+-----------------
+
+1. Frontend Deployment
+---------------------
+
+a) .env.production
+```
+VITE_API_URL=https://api.your-domain.com
+```
+
+b) Deploy script
+```bash
+# Build for production
+npm run build
+
+# Deploy to server
+# Example using rsync
+rsync -avz dist/ user@your-server:/var/www/html/
+```
+
+2. Backend Deployment
+--------------------
+
+a) .env.production
+```
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.your-domain.com
+
+DB_CONNECTION=mysql
+DB_HOST=your-db-host
+DB_PORT=3306
+DB_DATABASE=your-db-name
+DB_USERNAME=your-db-user
+DB_PASSWORD=your-db-password
+
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+
+REDIS_HOST=your-redis-host
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+b) Deploy script
+```bash
+# Install dependencies
+composer install --no-dev --optimize-autoloader
+
+# Clear cache
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Run migrations
+php artisan migrate --force
+
+# Restart services
+sudo systemctl restart php-fpm
+sudo systemctl restart nginx
+```
+
+PHẦN 5: SECURITY CHECKLIST
+-------------------------
+
+1. Frontend Security:
+- Implement CSRF protection
+- Sanitize user inputs
+- Use HTTPS
+- Implement proper authentication flow
+- Handle sensitive data securely
+- Use secure HTTP headers
+
+2. Backend Security:
+- Enable CORS properly
+- Implement rate limiting
+- Use proper validation
+- Implement proper authorization
+- Secure file uploads
+- Use secure session handling
+- Implement API authentication
+- Use secure password hashing
+- Implement audit logging 

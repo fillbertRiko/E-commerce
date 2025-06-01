@@ -7,7 +7,23 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\HomeController;
 
-Route::post('authenticate', [AuthenticationController::class, 'authenticate']);
+// Public routes
+Route::post('/login', [AuthenticationController::class, 'login']);
+Route::post('/register', [AuthenticationController::class, 'register']);
+
+// Protected routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthenticationController::class, 'logout']);
+    Route::get('/user', [AuthenticationController::class, 'user']);
+
+    // User routes
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UsersController::class, 'index']);
+        Route::get('/profile', [UsersController::class, 'profile']);
+        Route::post('/profile', [UsersController::class, 'updateProfile']);
+        Route::post('/change-password', [UsersController::class, 'changePassword']);
+    });
+});
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
