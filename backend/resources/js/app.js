@@ -1,13 +1,17 @@
 import './bootstrap';
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import router from './router';
 import axios from 'axios';
 
-const api = axios.create({
-    baseURL: 'http://localhost:8000/api/',
-    headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-    },
-    withCredentials: true,
-});
+// Configure axios
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-export default api;
+const app = createApp(App);
+
+app.use(createPinia());
+app.use(router);
+
+app.mount('#app');

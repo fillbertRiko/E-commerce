@@ -2,69 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use App\Http\Resources\ApiResource;
 
 class AuthenticationController extends Controller
 {
-    public function authenticate(Request $request)
+    public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string|min:8',
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'stastus' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        } else {
-            $credentials =
-                [
-                    'email' => $request->input('email'),
-                    'password' => $request->input('password'),
-                ];
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
 
-            if (Auth::attempt($credentials)) {
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-                $user = Auth::user();
-                $response = [
-                    'status' => true,
-                    'user' => $user
-                ];
+        return new ApiResource([
+            'user' => $user,
+            'token' => $token
+        ], 'success', 'User registered successfully');
+    }
 
-                if ($user->role::class === 'super_admin') {
-                    $response['message'] = 'Super Admin authenticated successfully.';
-                } elseif ($user->role::class === 'admin') {
-                    $response['message'] = 'Admin authenticated successfully.';
-                } else {
-                    $response['message'] = 'User authenticated successfully.';
-                }
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
 
-                return response()->json($response, 200);
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Either email or password is incorrect.',
-                    'errors' => [
-                        'email' => 'The provided credentials do not match our records.',
-                    ]
-                ], 401);
-            }
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
         }
+
+        $user = User::where('email', $request->email)->firstOrFail();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return new ApiResource([
+            'user' => $user,
+            'token' => $token
+        ], 'success', 'Logged in successfully');
     }
 
     public function logout(Request $request)
     {
-        $user = User::find(Auth::id());
-        $user->tokens()->delete();
-        return response()->json([
-            'status' => true,
-            'message' => 'User logged out successfully.'
-        ], 200);
+        $request->user()->currentAccessToken()->delete();
+        return new ApiResource(null, 'success', 'Logged out successfully');
+    }
+
+    public function user(Request $request)
+    {
+        return new ApiResource($request->user());
     }
 }
