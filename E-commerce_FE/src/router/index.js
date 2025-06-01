@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import Home from '../views/Home.vue';
-import Register from '../views/Auth/Register.vue';
+import Home from '@/views/Home.vue';
+import Register from '@/views/Auth/Register.vue';
 
 const routes = [
   {
@@ -19,114 +19,130 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('../views/Auth/Login.vue'),
+    component: () => import('@/views/Auth/Login.vue'),
     meta: { requiresGuest: true }
   },
   {
     path: '/forgot-password',
     name: 'forgot-password',
-    component: () => import('../views/Auth/ForgotPassword.vue'),
+    component: () => import('@/views/Auth/forgot-password.vue'),
     meta: { requiresGuest: true }
   },
   {
     path: '/reset-password',
     name: 'reset-password',
-    component: () => import('../views/Auth/ResetPassword.vue'),
+    component: () => import('@/views/Auth/reset-password.vue'),
     meta: { requiresGuest: true }
   },
   // User routes
   {
     path: '/profile',
     name: 'profile',
-    component: () => import('../views/User/Profile.vue'),
+    component: () => import('@/views/User/Profile.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/orders',
     name: 'orders',
-    component: () => import('../views/User/Orders.vue'),
+    component: () => import('@/views/User/Orders.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/orders/:id',
+    name: 'order-detail',
+    component: () => import('@/views/User/order-detail.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/wishlist',
     name: 'wishlist',
-    component: () => import('../views/User/Wishlist.vue'),
+    component: () => import('@/views/User/Wishlist.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/addresses',
     name: 'addresses',
-    component: () => import('../views/User/Addresses.vue'),
+    component: () => import('@/views/User/Addresses.vue'),
     meta: { requiresAuth: true }
   },
   // Shop routes
   {
     path: '/products',
     name: 'products',
-    component: () => import('../views/Products/ProductList.vue')
+    component: () => import('@/views/Products/product-list.vue')
   },
   {
     path: '/products/:id',
     name: 'product-detail',
-    component: () => import('../views/Products/ProductDetail.vue')
+    component: () => import('@/views/Products/product-detail.vue')
   },
   {
     path: '/categories',
     name: 'categories',
-    component: () => import('../views/Categories/CategoryList.vue')
+    component: () => import('@/views/Categories/category-list.vue')
   },
   {
     path: '/categories/:id',
     name: 'category-products',
-    component: () => import('../views/Categories/CategoryProducts.vue')
+    component: () => import('@/views/Categories/category-products.vue')
   },
   {
     path: '/cart',
     name: 'cart',
-    component: () => import('../views/Cart/CartView.vue')
+    component: () => import('@/views/Cart/cart-view.vue')
   },
   {
     path: '/checkout',
     name: 'checkout',
-    component: () => import('../views/Cart/Checkout.vue'),
+    component: () => import('@/views/Cart/Checkout.vue'),
     meta: { requiresAuth: true }
   },
   // Admin routes
   {
     path: '/admin',
     name: 'admin',
-    component: () => import('../views/Admin/Dashboard.vue'),
+    component: () => import('@/views/admin/Dashboard.vue'),
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       {
         path: 'products',
         name: 'admin-products',
-        component: () => import('../views/Admin/Products/ProductList.vue')
+        component: () => import('@/views/admin/Products/product-list.vue')
       },
       {
         path: 'products/create',
         name: 'admin-products-create',
-        component: () => import('../views/Admin/Products/ProductForm.vue')
+        component: () => import('@/views/admin/Products/product-form.vue')
       },
       {
         path: 'products/:id/edit',
         name: 'admin-products-edit',
-        component: () => import('../views/Admin/Products/ProductForm.vue')
+        component: () => import('@/views/admin/Products/product-form.vue')
       },
       {
         path: 'categories',
         name: 'admin-categories',
-        component: () => import('../views/Admin/Categories/CategoryList.vue')
+        component: () => import('@/views/admin/categories/category-list.vue')
       },
       {
         path: 'orders',
         name: 'admin-orders',
-        component: () => import('../views/Admin/Orders/OrderList.vue')
+        component: () => import('@/views/admin/Orders/order-list.vue')
+      },
+      {
+        path: 'orders/:id',
+        name: 'admin-order-detail',
+        component: () => import('@/views/admin/Orders/order-detail.vue')
       },
       {
         path: 'customers',
         name: 'admin-customers',
-        component: () => import('../views/Admin/Customers/CustomerList.vue')
+        component: () => import('@/views/admin/Customers/customer-list.vue')
+      },
+      {
+        path: 'customers/:id',
+        name: 'admin-customer-detail',
+        component: () => import('@/views/admin/Customers/customer-detail.vue')
       }
     ]
   },
@@ -134,23 +150,38 @@ const routes = [
   {
     path: '/about',
     name: 'about',
-    component: () => import('../views/About.vue')
+    component: () => import('@/views/About.vue')
   },
   {
     path: '/contact',
     name: 'contact',
-    component: () => import('../views/Contact.vue')
+    component: () => import('@/views/Contact.vue')
   },
   {
     path: '/faq',
     name: 'faq',
-    component: () => import('../views/FAQ.vue')
+    component: () => import('@/views/FAQ.vue')
+  },
+  {
+    path: '/privacy',
+    name: 'privacy',
+    component: () => import('@/views/Privacy.vue')
+  },
+  {
+    path: '/returns',
+    name: 'returns',
+    component: () => import('@/views/Returns.vue')
+  },
+  {
+    path: '/shipping',
+    name: 'shipping',
+    component: () => import('@/views/Shipping.vue')
   },
   // Error pages
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
-    component: () => import('../views/errors/NotFound.vue')
+    component: () => import('@/views/errors/not-found.vue')
   }
 ];
 
