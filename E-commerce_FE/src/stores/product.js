@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import api, { endpoints } from '@/services/api';
 import { useNotification } from '@/composables/useNotification';
 import { PAGINATION } from '@/utils/constants';
+import axios from '@/services/axios';
 
 export const useProductStore = defineStore('product', () => {
   // State
@@ -22,6 +23,9 @@ export const useProductStore = defineStore('product', () => {
     sort: 'newest',
     search: ''
   });
+  const totalProducts = ref(0);
+  const currentPage = ref(1);
+  const lastPage = ref(1);
 
   // Composables
   const notification = useNotification();
@@ -69,12 +73,16 @@ export const useProductStore = defineStore('product', () => {
 
       const response = await api.get(endpoints.products.list, { params: queryParams });
       products.value = response.data.data;
+      totalProducts.value = response.data.total;
+      currentPage.value = response.data.current_page;
+      lastPage.value = response.data.last_page;
       pagination.value = {
         currentPage: response.data.current_page,
         totalPages: response.data.last_page,
         perPage: response.data.per_page,
         total: response.data.total
       };
+      return response.data;
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch products';
       notification.error('Failed to fetch products');
@@ -90,6 +98,7 @@ export const useProductStore = defineStore('product', () => {
       error.value = null;
       const response = await api.get(endpoints.products.detail(id));
       currentProduct.value = response.data;
+      return response.data;
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch product';
       notification.error('Failed to fetch product details');
@@ -179,6 +188,39 @@ export const useProductStore = defineStore('product', () => {
     fetchProducts();
   };
 
+  const searchProducts = async (query, params = {}) => {
+    try {
+      const response = await axios.get('/api/products/search', {
+        params: { query, ...params }
+      });
+      products.value = response.data.data;
+      totalProducts.value = response.data.total;
+      currentPage.value = response.data.current_page;
+      lastPage.value = response.data.last_page;
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to search products');
+    }
+  };
+
+  const addReview = async (productId, reviewData) => {
+    try {
+      const response = await axios.post(`/api/products/${productId}/reviews`, reviewData);
+      return response.data.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to add review');
+    }
+  };
+
+  const fetchProductReviews = async (productId, params = {}) => {
+    try {
+      const response = await axios.get(`/api/products/${productId}/reviews`, { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch reviews');
+    }
+  };
+
   return {
     // State
     products,
@@ -187,6 +229,9 @@ export const useProductStore = defineStore('product', () => {
     error,
     pagination,
     filters,
+    totalProducts,
+    currentPage,
+    lastPage,
 
     // Getters
     sortedProducts,
@@ -199,6 +244,9 @@ export const useProductStore = defineStore('product', () => {
     deleteProduct,
     setFilters,
     setPage,
-    clearFilters
+    clearFilters,
+    searchProducts,
+    addReview,
+    fetchProductReviews
   };
 }); 

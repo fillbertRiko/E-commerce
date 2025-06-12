@@ -7,39 +7,23 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Foundation\Auth\RegistersUsers;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Illuminate\Foundation\Auth\ResetsPasswords;
-use Illuminate\Foundation\Auth\VerifiesEmails;
-use Illuminate\Foundation\Auth\RedirectsUsers;
-use Illuminate\Foundation\Auth\ThrottlesLogins;
-use Illuminate\Foundation\Auth\Middleware\EnsureEmailIsVerified;
-use Illuminate\Foundation\Auth\Middleware\AuthenticateWithBasicAuth;
-use Illuminate\Foundation\Auth\Middleware\AuthenticateWithToken;
-use Illuminate\Foundation\Auth\Middleware\CheckForMaintenanceMode;
+
 
 class AdminController extends Controller
 {
-    public function index()
-    {
-        return view('admin.page.index');
-    }
-
     public function dashboard()
     {
-        return view('admin.dashboard');
+        return view('admin.pages.dashboard');
     }
 
     public function settings()
     {
-        return view('admin.page.settings');
+        return view('admin.pages.settings');
     }
 
     public function users()
     {
-        return view('admin.page.users');
+        return view('admin.pages.users');
     }
 
     public function __construct()
@@ -50,12 +34,12 @@ class AdminController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        return view('admin.profile', ['user' => $user]);
+        return view('admin.pages.profile', ['user' => $user]);
     }
     public function editProfile()
     {
         $user = Auth::user();
-        return view('admin.edit-profile', ['user' => $user]);
+        return view('admin.pages.edit-profile', ['user' => $user]);
     }
     public function updateProfile(Request $request)
     {
@@ -72,7 +56,7 @@ class AdminController extends Controller
     }
     public function changePassword()
     {
-        return view('admin.change-password');
+        return view('admin.pages.change-password');
     }
     public function updatePassword(Request $request)
     {
@@ -106,11 +90,11 @@ class AdminController extends Controller
     public function importDetails()
     {
         // Logic to fetch and display import details
-        return view('admin.import-details');
+        return view('admin.pages.import-details');
     }
     public function importDetail($id)
     {
         // Logic to fetch and display a specific import detail by ID
-        return view('admin.import-detail', ['id' => $id]);
+        return view('admin.pages.import-detail', ['id' => $id]);
     }
 }

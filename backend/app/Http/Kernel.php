@@ -34,6 +34,9 @@ class Kernel extends HttpKernel
     ];
 
     protected $routeMiddleware = [
-        'role.redirect' => \App\Http\Middleware\CheckUserRole::class,
+        'guest' => \App\Http\Middleware\CheckUserRole::class,
+        'admin' => \App\Http\Middleware\CheckUserRole::class,
+        'user' => \App\Http\Middleware\CheckUserRole::class,
+
     ];
 }
